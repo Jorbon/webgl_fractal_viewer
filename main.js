@@ -278,10 +278,11 @@ gl.shaderSource(vert_shader, `#version 100
 attribute vec2 position;
 varying vec2 pos;
 
-uniform float time;
+uniform vec2 scale;
+uniform vec2 offset;
 
 void main() {
-    pos = position;
+    pos = position * scale + offset;
     gl_Position = vec4(position, 0, 1);
 }
 `);
@@ -298,14 +299,12 @@ gl.shaderSource(frag_shader, `#version 100
 precision highp float;
 varying vec2 pos;
 
-uniform float time;
-
 void main() {
     
     vec2 z = vec2(0, 0);
     
     float steps = 0.0;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 15; i++) {
         z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + pos;
         if (z.x*z.x + z.y*z.y <= 4.0) steps += 1.0;
     }
@@ -315,6 +314,12 @@ void main() {
     } else {
         gl_FragColor = vec4(0, 0, 0, 1);
     }
+    
+    // if (pos.x < -0.9) {
+    //     gl_FragColor = vec4(1, 0, 0, 1);
+    // } else {
+    //     gl_FragColor = vec4(0, 1, 0, 1);
+    // }
 }
 `);
 gl.compileShader(frag_shader);
@@ -362,7 +367,6 @@ gl.clearDepth(1);
 
 
 
-let t = 0;
 
 function draw () {
     requestAnimationFrame(draw);
@@ -370,9 +374,8 @@ function draw () {
     
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
-    t += 0.01;
-    
-    gl.uniform1f(gl.getUniformLocation(program, "time"), t);
+    gl.uniform2f(gl.getUniformLocation(program, "scale"), canvas.width/canvas.height, 1);
+    gl.uniform2f(gl.getUniformLocation(program, "offset"), -0.4, 0);
     
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     
